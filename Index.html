@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalendÃ¡rio Guarda</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary-color: #2c3e50;
+            --border-color: #dcdfe6;
+            --red-color: #e74c3c;
+            --blue-color: #3498db;
+            --past-red-color: rgba(231, 76, 60, 0.45);
+            --past-blue-color: rgba(52, 152, 219, 0.45);
+            --today-border: #f39c12;
+            --past-day-color: #a0a0a0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 12px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+        }
+
+        .btn-print {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn-print:active {
+            transform: scale(0.96);
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dates-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .input-inline {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .input-inline label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .input-inline input[type="date"] {
+            width: 100%;
+            padding: 6px 4px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            outline: none;
+            text-align: center;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #edf2f7;
+            font-size: 0.85rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .calendar-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .month-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .month-title {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            text-transform: capitalize;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #777;
+            margin-bottom: 6px;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            border-radius: 50%;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s, background-color 0.2s, color 0.2s;
+        }
+
+        .day.empty {
+            cursor: default;
+        }
+
+        .day:not(.empty):active {
+            transform: scale(0.9);
+        }
+
+        .day.past-day {
+            color: var(--past-day-color);
+        }
+
+        .day.today {
+            border: 2px solid var(--today-border);
+            font-weight: bold;
+        }
+
+        .day.highlight-red {
+            background-color: var(--red-color) !important;
+            color: white !important;
+            font-weight: bold;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .day.highlight-blue {
+            background-color: var(--blue-color) !important;
+            color: white !important;
+            font-weight: bold;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .day.highlight-red-past {
+            background-color: var(--past-red-color) !important;
+            color: #ffffff !important;
+            font-weight: normal;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .day.highlight-blue-past {
+            background-color: var(--past-blue-color) !important;
+            color: #ffffff !important;
+            font-weight: normal;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* --- ESTILOS DE IMPRESSÃƒO A4 (6 MESES EM 1 FOLHA) --- */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 5mm;
+            }
+
+            body {
+                background-color: #ffffff !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+
+            header {
+                margin-bottom: 4px !important;
+            }
+
+            h1 {
+                font-size: 1.1rem !important;
+                text-align: center;
+                width: 100%;
+            }
+
+            .btn-print, .controls {
+                display: none !important;
+            }
+
+            .calendar-container {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                grid-template-rows: repeat(3, 1fr) !important;
+                gap: 6px !important;
+                height: 275mm !important;
+            }
+
+            .month-card {
+                box-shadow: none !important;
+                border: 1px solid #d0d0d0 !important;
+                padding: 4px 6px !important;
+                border-radius: 6px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            .month-title {
+                font-size: 0.85rem !important;
+                margin-bottom: 2px !important;
+            }
+
+            .weekdays {
+                font-size: 0.65rem !important;
+                margin-bottom: 2px !important;
+            }
+
+            .days-grid {
+                gap: 1px !important;
+            }
+
+            .day {
+                font-size: 0.7rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CalendÃ¡rio Guarda</h1>
+        <button class="btn-print" onclick="window.print()">
+            ðŸ–¨ï¸ Imprimir
+        </button>
+    </header>
+
+    <section class="controls">
+        <div class="dates-row">
+            <div class="input-inline">
+                <label for="startDate">InÃ­cio:</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="input-inline">
+                <label for="endDate">Fim:</label>
+                <input type="date" id="endDate">
+            </div>
+        </div>
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-label">Total de Dias</span>
+                <span class="stat-value" id="totalDaysLabel">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total de MarcaÃ§Ãµes</span>
+                <span class="stat-value" id="totalMarksLabel">0</span>
+            </div>
+        </div>
+    </section>
+
+    <main id="calendar" class="calendar-container"></main>
+
+    <script>
+        const monthNames = [
+            "Janeiro", "Fevereiro", "MarÃ§o", "Abril", "Maio", "Junho",
+            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+        ];
+        const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "SÃ¡b"];
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayTime = today.getTime();
+
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth(); // 0 - 11
+
+        let selectedBaseDate = null;
+
+        // Elementos DOM
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const calendarContainer = document.getElementById('calendar');
+        const totalDaysLabel = document.getElementById('totalDaysLabel');
+        const totalMarksLabel = document.getElementById('totalMarksLabel');
+
+        // PrÃ©-seleÃ§Ã£o do semestre
+        function initDefaultDates() {
+            let startMonth = currentMonth < 6 ? 0 : 6;
+            let endMonth = currentMonth < 6 ? 5 : 11;
+
+            const startDate = new Date(currentYear, startMonth, 1);
+            const endDate = new Date(currentYear, endMonth + 1, 0); // Ãšltimo dia do mÃªs final
+
+            startDateInput.value = formatDateForInput(startDate);
+            endDateInput.value = formatDateForInput(endDate);
+        }
+
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function parseInputDate(str) {
+            if (!str) return null;
+            const parts = str.split('-');
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+
+        function updateStats() {
+            const startDate = parseInputDate(startDateInput.value);
+            const endDate = parseInputDate(endDateInput.value);
+
+            if (!startDate || !endDate || startDate > endDate) {
+                totalDaysLabel.textContent = "0";
+                totalMarksLabel.textContent = "0";
+                return;
+            }
+
+            const msInDay = 86400000;
+            const startMs = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime();
+            const endMs = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()).getTime();
+
+            const diffDays = Math.round((endMs - startMs) / msInDay) + 1;
+            totalDaysLabel.textContent = diffDays;
+
+            if (selectedBaseDate) {
+                const highlightedCount = document.querySelectorAll('.day[class*="highlight-"]').length;
+                totalMarksLabel.textContent = highlightedCount;
+            } else {
+                totalMarksLabel.textContent = "0";
+            }
+        }
+
+        function renderCalendar() {
+            calendarContainer.innerHTML = '';
+
+            const startDate = parseInputDate(startDateInput.value);
+            const endDate = parseInputDate(endDateInput.value);
+
+            if (!startDate || !endDate || startDate > endDate) {
+                calendarContainer.innerHTML = '<p style="text-align:center; color:red; padding: 12px;">Selecione um perÃ­odo vÃ¡lido.</p>';
+                updateStats();
+                return;
+            }
+
+            // Loop mÃªs a mÃªs dentro do intervalo selecionado
+            let currentCursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+            const endCursor = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+
+            while (currentCursor <= endCursor) {
+                const monthCard = createMonthCard(currentCursor.getFullYear(), currentCursor.getMonth(), startDate, endDate);
+                calendarContainer.appendChild(monthCard);
+                currentCursor.setMonth(currentCursor.getMonth() + 1);
+            }
+
+            applyHighlights();
+        }
+
+        function createMonthCard(year, month, minDate, maxDate) {
+            const card = document.createElement('div');
+            card.className = 'month-card';
+
+            const title = document.createElement('div');
+            title.className = 'month-title';
+            title.textContent = `${monthNames[month]} ${year}`;
+            card.appendChild(title);
+
+            const weekdaysDiv = document.createElement('div');
+            weekdaysDiv.className = 'weekdays';
+            weekDays.forEach(day => {
+                const dayEl = document.createElement('div');
+                dayEl.textContent = day;
+                weekdaysDiv.appendChild(dayEl);
+            });
+            card.appendChild(weekdaysDiv);
+
+            const daysGrid = document.createElement('div');
+            daysGrid.className = 'days-grid';
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // EspaÃ§os vazios antes do dia 1
+            for (let i = 0; i < firstDayIndex; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'day empty';
+                daysGrid.appendChild(empty);
+            }
+
+            for (let day = 1; day <= totalDaysInMonth; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'day';
+                dayEl.textContent = day;
+
+                const thisDate = new Date(year, month, day);
+                const dateStr = formatDateForInput(thisDate);
+                dayEl.dataset.date = dateStr;
+
+                const thisTime = thisDate.getTime();
+
+                // Identificar dia passado
+                if (thisTime < todayTime) {
+                    dayEl.classList.add('past-day');
+                }
+
+                // Destacar o dia atual
+                if (thisTime === todayTime) {
+                    dayEl.classList.add('today');
+                }
+
+                // Verificar se o dia estÃ¡ fora do range de exibiÃ§Ã£o/interaÃ§Ã£o
+                if (thisDate < new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate()) ||
+                    thisDate > new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate())) {
+                    dayEl.style.opacity = '0.2';
+                    dayEl.style.cursor = 'not-allowed';
+                } else {
+                    dayEl.addEventListener('click', () => {
+                        selectedBaseDate = thisDate;
+                        applyHighlights();
+                    });
+                }
+
+                daysGrid.appendChild(dayEl);
+            }
+
+            card.appendChild(daysGrid);
+            return card;
+        }
+
+        function applyHighlights() {
+            // Limpa marcaÃ§Ãµes anteriores
+            document.querySelectorAll('.day').forEach(el => {
+                el.classList.remove('highlight-red', 'highlight-blue', 'highlight-red-past', 'highlight-blue-past');
+            });
+
+            if (selectedBaseDate) {
+                const startDate = parseInputDate(startDateInput.value);
+                const endDate = parseInputDate(endDateInput.value);
+
+                const baseTime = new Date(selectedBaseDate.getFullYear(), selectedBaseDate.getMonth(), selectedBaseDate.getDate()).getTime();
+                const minTime = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime();
+                const maxTime = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()).getTime();
+
+                const msInDay = 86400000;
+
+                document.querySelectorAll('.day[data-date]').forEach(el => {
+                    const currentDate = parseInputDate(el.dataset.date);
+                    const currentTime = currentDate.getTime();
+
+                    if (currentTime >= minTime && currentTime <= maxTime) {
+                        const diffDays = Math.round((currentTime - baseTime) / msInDay);
+
+                        if (diffDays % 5 === 0) {
+                            const step = Math.abs(diffDays / 5);
+                            const isPast = currentTime < todayTime;
+
+                            if (step % 2 === 0) {
+                                // MÃºltiplos pares (0, 10, 20...) -> Vermelho
+                                if (isPast) {
+                                    el.classList.add('highlight-red-past');
+                                } else {
+                                    el.classList.add('highlight-red');
+                                }
+                            } else {
+                                // MÃºltiplos Ã­mpares (5, 15, 25...) -> Azul
+                                if (isPast) {
+                                    el.classList.add('highlight-blue-past');
+                                } else {
+                                    el.classList.add('highlight-blue');
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateStats();
+        }
+
+        // Event listeners
+        startDateInput.addEventListener('change', renderCalendar);
+        endDateInput.addEventListener('change', renderCalendar);
+
+        // InicializaÃ§Ã£o
+        initDefaultDates();
+        renderCalendar();
+    </script>
+</body>
+</html>
