@@ -1,4 +1,4 @@
-# 📅 Calendário Guarda Personalizado (PDF / Impressão)[span_1](start_span)[span_1](end_span)
+# 📅 Calendário Guarda Personalizado (PDF / Impressão)
 
 🔗 **Acesse a aplicação:** [https://caiorn.github.io/calendariodaguarda](https://caiorn.github.io/calendariodaguarda)
 
